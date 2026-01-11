@@ -1,0 +1,4 @@
+[Update] pip install open3d will work with python version '3.11.x.' In my case I was receiving the same error for python version '3.12.x'. So using a virtual environment with a python version 3.11.x is the best option.
+Currently 30/03/2025 Python 3.11.11
+
+Requirement: opend3d numpy trimesh
