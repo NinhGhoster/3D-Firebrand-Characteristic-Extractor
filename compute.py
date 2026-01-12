@@ -16,7 +16,7 @@ output_file = os.path.join(current_directory, "mesh_volumes_and_bboxes.csv")  # 
 with open(output_file, mode='w', newline='') as file:
     writer = csv.writer(file)
     # Write header with units
-    writer.writerow(['File (ID)', 'Volume (mm³)', 'Surface Area (mm²)', 'Length (mm)', 'Width (mm)', 'Height (mm)', 'Mass (g)'])
+    writer.writerow(['File (ID)', 'Volume (mm3)', 'Surface Area (mm2)', 'Length (mm)', 'Width (mm)', 'Height (mm)', 'Mass (g)'])
 
     # Iterate through all PLY files
     for filename in os.listdir(ply_folder):
@@ -25,8 +25,8 @@ with open(output_file, mode='w', newline='') as file:
             mesh = trimesh.load_mesh(os.path.join(ply_folder, filename))
             
             # Compute volume and surface area
-            volume = mesh.volume  # mm³
-            surface_area = mesh.area  # mm²
+            volume = abs(mesh.volume)  # mm3
+            surface_area = mesh.area  # mm2
             
             # Get the axis-aligned bounding box (AABB)
             bbox_length, bbox_width, bbox_height = mesh.bounding_box.extents  # Length, width, height in mm
@@ -34,7 +34,7 @@ with open(output_file, mode='w', newline='') as file:
             # Write the results to CSV (Mass column left empty for manual input)
             writer.writerow([filename, f"{volume:.3f}", f"{surface_area:.3f}", f"{bbox_length:.3f}", f"{bbox_width:.3f}", f"{bbox_height:.3f}", ""])
 
-            print(f"Processed {filename} - Volume: {volume:.3f} mm³, Surface Area: {surface_area:.3f} mm², "
+            print(f"Processed {filename} - Volume: {volume:.3f} mm3, Surface Area: {surface_area:.3f} mm2, "
                   f"Size (LxWxH): {bbox_length:.3f} x {bbox_width:.3f} x {bbox_height:.3f} mm")
 
 print(f"Results saved to {output_file}")

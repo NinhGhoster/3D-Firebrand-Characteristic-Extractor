@@ -3,6 +3,7 @@ Created in March 28 2025
 For firebrand seperation from .PLY
 @author: Ha-Ninh NGUYEN
 """
+import argparse
 import open3d as o3d
 import numpy as np
 import os
@@ -47,21 +48,67 @@ def segment_mesh_objects(ply_file, output_folder, distance_threshold=0.02, min_c
 
     return num_clusters, saved_count, skipped_count
 
-def process_all_ply_files():
-    script_dir = os.path.dirname(os.path.abspath(__file__))
-    ply_files = [f for f in os.listdir(script_dir) if f.endswith(".ply")]
-    output_folder = os.path.join(script_dir, "segmented_mesh_objects")
-    
-    total_files = len(ply_files)
-    print(f"Found {total_files} PLY files. Processing...")
-    
-    for ply_file in ply_files:
-        print(f"Processing {ply_file}...")
+def process_all_ply_files(root_dir, output_subdir, distance_threshold, min_cluster_size):
+    ply_paths = []
+    for dirpath, dirnames, filenames in os.walk(root_dir):
+        if output_subdir:
+            # Skip any existing output folders to avoid re-processing segmented meshes.
+            if output_subdir in dirpath.split(os.sep):
+                continue
+        for filename in filenames:
+            if filename.endswith(".ply"):
+                ply_paths.append(os.path.join(dirpath, filename))
+
+    total_files = len(ply_paths)
+    print(f"Found {total_files} PLY files under {root_dir}. Processing...")
+
+    for ply_path in ply_paths:
+        parent_dir = os.path.dirname(ply_path)
+        output_folder = parent_dir if not output_subdir else os.path.join(parent_dir, output_subdir)
+        print(f"Processing {ply_path}...")
         num_clusters, saved_count, skipped_count = segment_mesh_objects(
-            os.path.join(script_dir, ply_file), output_folder, distance_threshold=50, min_cluster_size=1000)
-        print(f"{ply_file}: Found {num_clusters} objects, saved {saved_count}, skipped {skipped_count} small clusters.")
-    
+            ply_path,
+            output_folder,
+            distance_threshold=distance_threshold,
+            min_cluster_size=min_cluster_size,
+        )
+        print(
+            f"{os.path.basename(ply_path)}: Found {num_clusters} objects, "
+            f"saved {saved_count}, skipped {skipped_count} small clusters."
+        )
+
     print("Processing complete.")
 
 if __name__ == "__main__":
-    process_all_ply_files()
+    parser = argparse.ArgumentParser(description="Segment all PLY files under a directory tree.")
+    parser.add_argument(
+        "root_dir",
+        nargs="?",
+        default=os.path.dirname(os.path.abspath(__file__)),
+        help="Root directory to scan for .ply files (default: script directory).",
+    )
+    parser.add_argument(
+        "--output-subdir",
+        default="",
+        help="Output folder name created next to each .ply file (default: same folder).",
+    )
+    parser.add_argument(
+        "--distance-threshold",
+        type=float,
+        default=50,
+        help="Minimum max extent for a cluster to be saved.",
+    )
+    parser.add_argument(
+        "--min-cluster-size",
+        type=int,
+        default=1000,
+        help="Minimum number of triangles in a cluster to be saved.",
+    )
+    args = parser.parse_args()
+
+    process_all_ply_files(
+        root_dir=args.root_dir,
+        output_subdir=args.output_subdir,
+        distance_threshold=args.distance_threshold,
+        min_cluster_size=args.min_cluster_size,
+    )
