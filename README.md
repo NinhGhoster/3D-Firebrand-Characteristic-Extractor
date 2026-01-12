@@ -47,13 +47,17 @@ Folder-by-folder CSV with PCA export (temp files):
 ```bash
 python "characteristic extract.py" "/path/to/root"
 ```
-This scans subfolders, writes one CSV per folder named after the folder (e.g., `0609_10.csv`),
-uses a PCA-rotated mesh to compute smallest OBB lengths, and deletes temp files after the CSV.
+This scans all subfolders under the root (folder-of-folder), writes one CSV per folder named
+after the folder (e.g., `0609_10.csv`), uses a PCA-rotated mesh to compute smallest OBB lengths,
+and deletes temp files after the CSV.
 
 Keep the temp PCA exports for inspection:
 ```bash
 python "characteristic extract.py" "/path/to/root" --keep-temp
 ```
+CLI options:
+- `root_dir`: root folder to scan recursively (defaults to the current working directory).
+- `--keep-temp`: keep the per-folder PCA temp exports for inspection.
 
 ## Notes
 - Volume is absolute (`abs(mesh.volume)`) to avoid negative values from flipped normals.
