@@ -47,11 +47,14 @@ python compute.py /path/to/ply_files
 ```
 Uses axis-aligned bounding box (AABB) for Length/Width/Height.
 
+**Output location**: Creates `mesh_volumes_and_bboxes.csv` in the input directory
+
 Optional arguments:
 - `-o, --output`: Specify custom output CSV path
   ```bash
-  python compute.py /path/to/ply_files -o results.csv
+  python compute.py /path/to/ply_files -o /custom/path/results.csv
   ```
+  Output will be saved to the specified path instead of the default location
 
 ### Extract characteristics (OBB, no mesh export)
 ```bash
