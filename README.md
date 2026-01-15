@@ -6,8 +6,7 @@ Tools to segment firebrand meshes and extract geometric characteristics from .pl
 
 ```
 .
-├── segmented_mesh_objects/      # Input folder: place your segmented .ply files here
-├── compute.py                   # Main script: extracts mesh characteristics to CSV
+├── compute.py                   # Extract mesh characteristics (AABB) to CSV
 ├── computer new backup.py       # Alternative: uses oriented bounding box (OBB)
 ├── characteristic extract.py    # Advanced: per-folder CSV output with PCA rotation
 ├── seperation v2.py             # Utility: segments connected components
@@ -33,19 +32,43 @@ conda activate firebrand-extractor
 
 ## Quick Start
 
-1. **Place your segmented mesh files** in the `segmented_mesh_objects/` folder
-2. **Run the extraction script**:
-   ```bash
-   python compute.py
-   ```
-3. **Check results** in `mesh_volumes_and_bboxes.csv`
+Extract mesh characteristics from a directory of .ply files:
+```bash
+python compute.py /path/to/folder
+```
 
-The CSV output includes:
-- File (ID)
-- Volume (mm3) — using absolute value to avoid negative volumes from flipped normals
-- Surface Area (mm2)
-- Length, Width, Height (mm) — from axis-aligned bounding box (AABB)
-- Mass (g) — manual input column
+Results are saved to `/path/to/folder/mesh_volumes_and_bboxes.csv`
+
+## Usage
+
+### Extract characteristics (AABB)
+```bash
+python compute.py /path/to/ply_files
+```
+Uses axis-aligned bounding box (AABB) for Length/Width/Height.
+
+Optional arguments:
+- `-o, --output`: Specify custom output CSV path
+  ```bash
+  python compute.py /path/to/ply_files -o results.csv
+  ```
+
+### Extract characteristics (OBB, no mesh export)
+```bash
+python "computer new backup.py" /path/to/ply_files
+```
+Uses smallest oriented bounding box (OBB) instead of AABB.
+
+### Folder-by-folder extraction with PCA
+```bash
+python "characteristic extract.py" /path/to/root
+```
+Scans recursively, writes one CSV per folder using PCA-rotated mesh to compute smallest OBB.
+
+Keep temp PCA exports:
+```bash
+python "characteristic extract.py" /path/to/root --keep-temp
+```
 
 ## Typical Workflow
 
@@ -53,42 +76,41 @@ The CSV output includes:
 ```bash
 python "seperation v2.py" "/path/to/root"
 ```
-This scans recursively and writes segmented outputs into the same folder as each source file.
+Scans recursively and writes segmented outputs into the same folder as each source file.
 
 ### Step 2 (Optional): Organize outputs by prefix
 ```bash
 python "organize_ply_by_prefix.py" "/path/to/root" --dry-run
 python "organize_ply_by_prefix.py" "/path/to/root"
 ```
-This moves `<prefix>_mesh*.ply` into a `<prefix>/` folder and removes redundant `*_mesh_1.ply` when no other clusters exist.
+Moves `<prefix>_mesh*.ply` into a `<prefix>/` folder and removes redundant `*_mesh_1.ply` when no other clusters exist.
 
 ### Step 3: Extract characteristics
-Place your segmented `.ply` files in `segmented_mesh_objects/`, then:
-```bash
-python compute.py
-```
-Outputs `mesh_volumes_and_bboxes.csv` with axis-aligned bounding box dimensions and absolute volume.
+Use any of the extraction scripts:
 
-### Alternative: Smallest OBB (no mesh export)
+**AABB (simplest, fastest)**
 ```bash
-python "computer new backup.py"
-```
-Uses the smallest oriented bounding box for Length/Width/Height instead of AABB.
-
-### Advanced: Folder-by-folder CSV with PCA export
-```bash
-python "characteristic extract.py" "/path/to/root"
-```
-This scans all subfolders under the root, writes one CSV per folder (named after the folder), uses a PCA-rotated mesh to compute smallest OBB lengths, and deletes temp files after the CSV.
-
-Keep the temp PCA exports for inspection:
-```bash
-python "characteristic extract.py" "/path/to/root" --keep-temp
+python compute.py /path/to/segmented_files
 ```
 
-CLI options:
-- `root_dir`: root folder to scan recursively (defaults to the current working directory)
-- `--keep-temp`: keep the per-folder PCA temp exports for inspection
+**OBB (oriented bounding box)**
+```bash
+python "computer new backup.py" /path/to/segmented_files
+```
+
+**Per-folder with PCA (most detailed)**
+```bash
+python "characteristic extract.py" /path/to/root
+```
+
+## Output Format
+
+CSV file includes:
+- File (ID)
+- Volume (mm3) — using absolute value to avoid negative volumes from flipped normals
+- Surface Area (mm2)
+- Length, Width, Height (mm) — from bounding box (AABB or OBB depending on script)
+- Mass (g) — manual input column
 
 ## Notes
 
@@ -96,3 +118,4 @@ CLI options:
 - AABB (axis-aligned bounding box) is the default for Length/Width/Height in `compute.py`
 - OBB (oriented bounding box) is available in `computer new backup.py` and `characteristic extract.py`
 - If you want different thresholds or folder rules, update script arguments and re-run
+
